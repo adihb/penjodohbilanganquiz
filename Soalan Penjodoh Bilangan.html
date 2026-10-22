@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1f6b">
+<title>PENJODOH BILANGAN</title>
+<style>
+:root {
+    --navy: #0b1f6b;
+    --navy-d: #071548;
+    --gold: #ffcc00;
+    --gold-d: #e0a800;
+    --ink: #1b2340;
+    --muted: #5a6488;
+    --ok: #2e9e57;
+    --ok-bg: #d9f4e3;
+    --bad: #d93a3a;
+    --bad-bg: #fde0e0;
+    --bg: #eef3fb;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; }
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: linear-gradient(160deg, var(--navy-d), #1b3a9c);
+    color: var(--ink);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+button { font-family: inherit; cursor: pointer; border: 0; }
+
+/* ---------- SKRIN MULA ---------- */
+#entry-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.entry-card {
+    width: 100%;
+    max-width: 340px;
+    background: #fff;
+    border-radius: 24px;
+    padding: 0 26px 28px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+    overflow: hidden;
+}
+
+.entry-card::before {
+    content: "";
+    display: block;
+    height: 8px;
+    margin: 0 -26px 24px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-d));
+}
+
+.entry-card h1 { margin: 0; font-size: 26px; letter-spacing: 1.2px; color: var(--navy); }
+.entry-card p { margin: 6px 0 20px; font-size: 14px; color: var(--muted); }
+
+input {
+    width: 100%;
+    padding: 14px 16px;
+    margin: 6px 0;
+    border: 2px solid #d8def0;
+    border-radius: 14px;
+    font-size: 16px;
+    outline: none;
+    text-transform: uppercase;
+    background: #f7f9ff;
+    user-select: text;
+    -webkit-user-select: text;
+    transition: border-color .2s, background .2s;
+}
+
+input:focus { border-color: var(--navy); background: #fff; }
+input.err { border-color: var(--bad); background: var(--bad-bg); }
+
+#btn-start {
+    width: 100%;
+    margin-top: 16px;
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    color: var(--navy-d);
+    background: linear-gradient(180deg, var(--gold), var(--gold-d));
+    box-shadow: 0 5px 0 #b88a00;
+    transition: transform .1s, box-shadow .1s;
+}
+
+#btn-start:active { transform: translateY(4px); box-shadow: 0 1px 0 #b88a00; }
+
+/* ---------- SKRIN GAME ---------- */
+#game-screen {
+    position: fixed;
+    inset: 0;
+    display: none;
+    grid-template-rows: auto 1fr auto;
+    background: var(--bg);
+}
+
+#topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+    background: var(--navy);
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .25);
+    z-index: 5;
+}
+
+#topbar .brand { font-weight: 800; letter-spacing: 1px; font-size: 14px; color: var(--gold); white-space: nowrap; }
+#topbar .who { min-width: 0; text-align: right; line-height: 1.2; }
+#display-nama { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#display-kelas { display: block; font-size: 11px; opacity: .8; }
+
+#content {
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    padding: 14px 12px 18px;
+}
+
+.arahan {
+    max-width: 520px;
+    margin: 0 auto 12px;
+    padding: 0 4px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--ink);
+}
+
+.arahan b { color: var(--navy); }
+.arahan .tajuk { display: block; margin-bottom: 2px; font-size: 13px; font-weight: 800; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+
+/* ---------- AYAT ---------- */
+.ayat {
+    max-width: 520px;
+    margin: 0 auto 10px;
+    padding: 14px 14px 14px 52px;
+    position: relative;
+    background: #fff;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(11, 31, 107, .1);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 2.3;
+    transition: border-color .2s, background .2s;
+}
+
+.ayat .no {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.ayat.correct { border-color: var(--ok); background: var(--ok-bg); }
+.ayat.incorrect { border-color: var(--bad); background: var(--bad-bg); }
+
+/* ---------- KOTAK KOSONG ---------- */
+.drop-zone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    height: 36px;
+    padding: 0 10px;
+    vertical-align: middle;
+    border: 2px dashed rgba(11, 31, 107, .5);
+    border-radius: 10px;
+    background: #f4f7ff;
+    color: var(--navy);
+    font-size: 17px;
+    font-weight: 800;
+    transition: background-color .15s, border-color .15s, box-shadow .15s;
+}
+
+.drop-zone:not(:empty) {
+    border-style: solid;
+    border-color: var(--navy);
+    background: #fff;
+    cursor: pointer;
+}
+
+.drop-zone.hover {
+    border-color: var(--gold-d);
+    background: #fff6cc;
+    box-shadow: 0 0 0 4px rgba(255, 204, 0, .45);
+}
+
+.ayat.correct .drop-zone { border-color: var(--ok); background: #fff; }
+.ayat.incorrect .drop-zone { border-color: var(--bad); background: #fff; }
+
+/* ---------- PANEL BAWAH ---------- */
+#tray {
+    background: #fff;
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -6px 20px rgba(11, 31, 107, .14);
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    z-index: 6;
+}
+
+.tray-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+#progress { background: var(--navy); color: #fff; border-radius: 99px; padding: 2px 10px; }
+
+#chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.chip {
+    min-width: 92px;
+    height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--navy-d);
+    background: linear-gradient(180deg, #ffe26a, var(--gold));
+    border: 2px solid var(--gold-d);
+    border-radius: 14px;
+    box-shadow: 0 3px 0 #b88a00;
+    touch-action: none;
+    cursor: grab;
+}
+
+.chip.placed {
+    background: transparent;
+    border: 2px dashed #cfd6ea;
+    color: transparent;
+    box-shadow: none;
+    pointer-events: none;
+}
+
+.chip.lifted { opacity: .3; }
+
+.chip.ghost {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, .3);
+}
+
+#controls { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-top: 14px; }
+
+#btn-reset, #btn-semak {
+    height: 48px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    transition: transform .1s;
+}
+
+#btn-reset { background: #eceff8; color: var(--navy); }
+#btn-semak { background: var(--ok); color: #fff; box-shadow: 0 4px 0 #1f7a42; }
+#btn-reset:active, #btn-semak:active { transform: translateY(2px); }
+
+/* ---------- TOAST & KEPUTUSAN ---------- */
+#toast {
+    position: fixed;
+    left: 50%;
+    bottom: 30%;
+    transform: translate(-50%, 10px);
+    background: rgba(27, 35, 64, .92);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 99px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    z-index: 2000;
+    white-space: nowrap;
+}
+
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+#result {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    background: rgba(7, 21, 72, .6);
+    z-index: 3000;
+}
+
+#result.show { display: flex; }
+
+.result-card {
+    width: 100%;
+    max-width: 320px;
+    padding: 28px 22px 22px;
+    background: #fff;
+    border-radius: 24px;
+    text-align: center;
+    animation: pop .3s ease-out;
+}
+
+@keyframes pop {
+    from { transform: scale(.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.result-card .emoji { font-size: 52px; line-height: 1; }
+.result-card h2 { margin: 10px 0 2px; font-size: 22px; color: var(--navy); }
+.result-card .score { font-size: 44px; font-weight: 800; color: var(--navy); }
+.result-card .score small { font-size: 22px; color: var(--muted); }
+.result-card p { margin: 4px 0 18px; color: var(--muted); font-size: 14px; }
+.result-card .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.result-card button { height: 46px; border-radius: 12px; font-weight: 800; font-size: 14px; }
+#res-close { background: #eceff8; color: var(--navy); }
+#res-again { background: var(--navy); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- SKRIN MULA -->
+<div id="entry-screen">
+    <div class="entry-card">
+        <h1>PENJODOH BILANGAN</h1>
+        <p>Isi maklumat untuk mula menjawab</p>
+        <input type="text" id="input-nama" placeholder="Nama Murid" autocomplete="off">
+        <input type="text" id="input-kelas" placeholder="Kelas" autocomplete="off">
+        <button id="btn-start">MULA SOALAN</button>
+    </div>
+</div>
+
+<!-- SKRIN GAME -->
+<div id="game-screen">
+    <header id="topbar">
+        <div class="brand">PENJODOH BILANGAN</div>
+        <div class="who">
+            <span id="display-nama">-</span>
+            <span id="display-kelas">-</span>
+        </div>
+    </header>
+
+    <main id="content">
+        <div class="arahan">
+            <span class="tajuk">Soalan 2</span>
+            Padankan ayat di bawah dengan <b>penjodoh bilangan</b> yang betul.
+        </div>
+        <div id="ayat-list"></div>
+    </main>
+
+    <section id="tray">
+        <div class="tray-head">
+            <span>Tekan &amp; seret perkataan ke petak kosong</span>
+            <span id="progress">0 / 5</span>
+        </div>
+        <div id="chips"></div>
+        <div id="controls">
+            <button id="btn-reset">RESET</button>
+            <button id="btn-semak">SEMAK</button>
+        </div>
+    </section>
+</div>
+
+<div id="toast"></div>
+
+<div id="result">
+    <div class="result-card">
+        <div class="emoji" id="res-emoji">🎉</div>
+        <h2 id="res-title">Hebat!</h2>
+        <div class="score"><span id="res-score">0</span><small> / 5</small></div>
+        <p id="res-msg"></p>
+        <div class="row">
+            <button id="res-close">TUTUP</button>
+            <button id="res-again">MAIN SEMULA</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+/* ---------- Data soalan ---------- */
+// pre = teks sebelum petak kosong, post = teks selepas petak kosong
+const WORDS = ['orang', 'helai', 'kuntum', 'buah', 'biji'];
+
+const AYAT = [
+    { pre: 'Kakak memetik dua ',            post: ' bunga ros.',                    answer: 'kuntum' },
+    { pre: 'Tiga ',                         post: ' murid sedang membaca di dalam kelas.', answer: 'orang' },
+    { pre: 'Adik menendang se ',             post: ' bola.',                         answer: 'biji' },
+    { pre: 'Ibu membeli beberapa ',         post: ' baju untuk adik.',              answer: 'helai' },
+    { pre: 'Datuk Chong ada empat ',        post: ' kereta.',                       answer: 'buah' }
+];
+
+const chipsBox = $('chips');
+const listBox = $('ayat-list');
+const zones = [];
+const ayatEls = [];
+const chips = [];
+
+/* ---------- Bina ayat ---------- */
+AYAT.forEach((a, i) => {
+    const row = document.createElement('div');
+    row.className = 'ayat';
+
+    const no = document.createElement('span');
+    no.className = 'no';
+    no.textContent = i + 1;
+
+    const zone = document.createElement('span');
+    zone.className = 'drop-zone';
+    zone.dataset.answer = 'chip-' + a.answer;
+
+    row.append(no, document.createTextNode(a.pre), zone, document.createTextNode(a.post));
+    listBox.appendChild(row);
+
+    zone.addEventListener('click', () => { if (zone.dataset.occupiedId) release(zone); });
+    zones.push(zone);
+    ayatEls.push(row);
+});
+
+/* ---------- Bina perkataan (chip) ---------- */
+WORDS.forEach(w => {
+    const c = document.createElement('div');
+    c.className = 'chip';
+    c.id = 'chip-' + w;
+    c.textContent = w;
+    c.addEventListener('pointerdown', onDown);
+    chipsBox.appendChild(c);
+    chips.push(c);
+});
+
+function shuffleChips() {
+    const arr = [...chips];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    arr.forEach(c => chipsBox.appendChild(c));
+}
+
+/* ---------- Skrin mula ---------- */
+function startGame() {
+    const namaEl = $('input-nama');
+    const kelasEl = $('input-kelas');
+    const nama = namaEl.value.trim().toUpperCase();
+    const kelas = kelasEl.value.trim().toUpperCase();
+
+    namaEl.classList.toggle('err', !nama);
+    kelasEl.classList.toggle('err', !kelas);
+    if (!nama || !kelas) {
+        (!nama ? namaEl : kelasEl).focus();
+        return;
+    }
+
+    $('display-nama').textContent = nama;
+    $('display-kelas').textContent = kelas;
+    $('entry-screen').style.display = 'none';
+    $('game-screen').style.display = 'grid';
+    shuffleChips();
+}
+
+$('btn-start').addEventListener('click', startGame);
+['input-nama', 'input-kelas'].forEach(id => {
+    $(id).addEventListener('input', e => e.target.classList.remove('err'));
+    $(id).addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
+});
+
+/* ---------- Letak / keluarkan jawapan ---------- */
+function updateProgress() {
+    const n = zones.filter(z => z.dataset.occupiedId).length;
+    $('progress').textContent = n + ' / ' + zones.length;
+}
+
+function clearMarks(zone) {
+    zone.closest('.ayat').classList.remove('correct', 'incorrect');
+}
+
+function release(zone) {
+    const id = zone.dataset.occupiedId;
+    if (id) $(id).classList.remove('placed');
+    zone.textContent = '';
+    delete zone.dataset.occupiedId;
+    zone.classList.remove('hover');
+    clearMarks(zone);
+    updateProgress();
+}
+
+function place(zone, chip) {
+    if (zone.dataset.occupiedId) release(zone);   // perkataan lama balik ke panel
+    zone.textContent = chip.textContent;
+    zone.dataset.occupiedId = chip.id;
+    clearMarks(zone);
+    chip.classList.add('placed');
+    updateProgress();
+}
+
+/* ---------- Drag & drop (sentuh + tetikus) ---------- */
+let drag = null;
+
+function zoneAt(x, y) {
+    const pad = 12;   // kawasan sentuh dilebarkan supaya mudah untuk jari
+    let best = null, bestD = Infinity;
+    zones.forEach(z => {
+        const r = z.getBoundingClientRect();
+        if (x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad) {
+            const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
+            if (d < bestD) { best = z; bestD = d; }
+        }
+    });
+    return best;
+}
+
+function moveGhost(e) {
+    drag.ghost.style.transform =
+        `translate(${e.clientX - drag.dx}px, ${e.clientY - drag.dy}px) scale(1.06)`;
+    const z = zoneAt(e.clientX, e.clientY);
+    if (z !== drag.zone) {
+        if (drag.zone) drag.zone.classList.remove('hover');
+        if (z) z.classList.add('hover');
+        drag.zone = z;
+    }
+}
+
+function endDrag(e, drop) {
+    if (!drag) return;
+    const { chip, ghost, zone } = drag;
+    chip.removeEventListener('pointermove', onMove);
+    chip.removeEventListener('pointerup', onUp);
+    chip.removeEventListener('pointercancel', onCancel);
+    try { chip.releasePointerCapture(e.pointerId); } catch (_) {}
+    ghost.remove();
+    chip.classList.remove('lifted');
+    if (zone) zone.classList.remove('hover');
+    if (drop && zone) place(zone, chip);
+    drag = null;
+}
+
+function onDown(e) {
+    const chip = e.currentTarget;
+    if (drag || chip.classList.contains('placed')) return;
+    e.preventDefault();
+
+    const r = chip.getBoundingClientRect();
+    const ghost = chip.cloneNode(true);
+    ghost.removeAttribute('id');
+    ghost.classList.add('ghost');
+    ghost.style.width = r.width + 'px';
+    document.body.appendChild(ghost);
+
+    drag = { chip, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top, zone: null };
+    chip.classList.add('lifted');
+    chip.setPointerCapture(e.pointerId);
+    chip.addEventListener('pointermove', onMove);
+    chip.addEventListener('pointerup', onUp);
+    chip.addEventListener('pointercancel', onCancel);
+    moveGhost(e);
+}
+
+function onMove(e) { if (drag) moveGhost(e); }
+function onUp(e) { endDrag(e, true); }
+function onCancel(e) { endDrag(e, false); }
+
+/* ---------- Semak ---------- */
+let toastTimer;
+function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function checkAnswers() {
+    const filled = zones.filter(z => z.dataset.occupiedId);
+    if (filled.length === 0) {
+        toast('Letakkan perkataan ke petak kosong dahulu!');
+        return;
+    }
+
+    let score = 0;
+    zones.forEach((z, i) => {
+        ayatEls[i].classList.remove('correct', 'incorrect');
+        if (!z.dataset.occupiedId) return;
+        if (z.dataset.occupiedId === z.dataset.answer) {
+            ayatEls[i].classList.add('correct');
+            score++;
+        } else {
+            ayatEls[i].classList.add('incorrect');
+        }
+    });
+
+    const total = zones.length;
+    let emoji, title;
+    if (score === total) { emoji = '🎉'; title = 'Hebat!'; }
+    else if (score >= 3) { emoji = '👍'; title = 'Bagus!'; }
+    else { emoji = '💪'; title = 'Cuba lagi!'; }
+
+    // Nama pendek: perkataan pertama sahaja (MARIAM BINTI ALI -> Mariam)
+    const first = $('display-nama').textContent.trim().split(/\s+/)[0] || '';
+    const namaPendek = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+
+    const kosong = total - filled.length;
+    $('res-emoji').textContent = emoji;
+    $('res-title').textContent = title + ' ' + namaPendek;
+    $('res-score').textContent = score;
+    $('res-msg').textContent = kosong > 0
+        ? kosong + ' petak masih kosong.'
+        : (score === total ? 'Semua jawapan betul.' : 'Ayat merah perlu dibetulkan.');
+    $('result').classList.add('show');
+}
+
+function resetGame() {
+    zones.forEach(release);
+    shuffleChips();
+    $('result').classList.remove('show');
+    $('content').scrollTop = 0;
+}
+
+$('btn-semak').addEventListener('click', checkAnswers);
+$('btn-reset').addEventListener('click', resetGame);
+$('res-close').addEventListener('click', () => $('result').classList.remove('show'));
+$('res-again').addEventListener('click', resetGame);
+</script>
+
+</body>
+</html>
